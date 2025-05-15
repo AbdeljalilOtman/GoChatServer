@@ -1,3 +1,3 @@
-module Chat_server/AbdeljalilOtman
+module github.com/abdeljalil/GoChatServer
 
-go 1.23.4
+go 1.21
