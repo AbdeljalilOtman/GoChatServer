@@ -1,0 +1,98 @@
+2025/05/16 19:37:55 Server started on port 8080
+2025/05/16 19:38:10 New connection from [::1]:53015
+2025/05/16 19:38:10 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 19:38:26 Client [::1]:53015 executing command: /login abdeljalil 1234
+2025/05/16 19:38:26 User abdeljalil registered and logged in
+2025/05/16 19:38:54 New connection from [::1]:53548
+2025/05/16 19:38:54 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 19:39:12 Client [::1]:53548 executing command: /login ahmed 12345
+2025/05/16 19:39:12 User ahmed registered and logged in
+2025/05/16 19:39:58 Client [::1]:53548 executing command: /rooms
+2025/05/16 19:40:15 Client [::1]:53548 executing command: /join r1
+2025/05/16 19:40:15 Message sent to ahmed: You have joined room: r1
+2025/05/16 19:40:22 Client [::1]:53015 executing command: /rooms
+2025/05/16 19:40:32 Client [::1]:53015 executing command: /join r1
+2025/05/16 19:40:32 Message sent to abdeljalil: You have joined room: r1
+2025/05/16 19:40:48 Client [::1]:53548 executing command: /users
+2025/05/16 19:46:44 New connection from [::1]:59329
+2025/05/16 19:46:44 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 19:46:55 Client [::1]:59329 executing command: /login abdel 123
+2025/05/16 19:46:55 User abdel registered and logged in
+2025/05/16 19:47:29 Client [::1]:59329 executing command: /join r1
+2025/05/16 19:47:29 Message sent to abdel: You have joined room: r1
+2025/05/16 19:48:00 New connection from [::1]:60263
+2025/05/16 19:48:00 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 19:48:10 Client [::1]:60263 executing command: /login ahmed lahlou
+2025/05/16 19:48:10 Failed login attempt for user ahmed
+2025/05/16 19:48:17 Client [::1]:60263 executing command: /login ahmed lahlou
+2025/05/16 19:48:17 Failed login attempt for user ahmed
+2025/05/16 19:48:27 Client [::1]:60263 executing command: /login ahmed 123
+2025/05/16 19:48:27 Failed login attempt for user ahmed
+2025/05/16 19:48:36 Client [::1]:60263 executing command: /login ahmed 123
+2025/05/16 19:48:36 Failed login attempt for user ahmed
+2025/05/16 19:48:41 Client [::1]:60263 executing command: /login ahmed 12
+2025/05/16 19:48:41 Failed login attempt for user ahmed
+2025/05/16 19:49:15 Client [::1]:60263 executing command: /login 12 hfgy
+2025/05/16 19:49:15 User 12 registered and logged in
+2025/05/16 19:49:27 Client [::1]:60263 executing command: /rooms
+2025/05/16 20:02:14 Server started on port 8080
+2025/05/16 20:02:32 New connection from [::1]:54584
+2025/05/16 20:02:32 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:02:43 Client [::1]:54584 executing command: /login a 123
+2025/05/16 20:02:43 User a registered and logged in
+2025/05/16 20:03:30 New connection from [::1]:55287
+2025/05/16 20:03:30 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:03:49 Client [::1]:55287 executing command: /login g 123
+2025/05/16 20:03:49 User g registered and logged in
+2025/05/16 20:04:44 Client [::1]:55287 executing command: /join r2
+2025/05/16 20:04:44 Message sent to g: You have joined room: r2
+2025/05/16 20:05:12 Client [::1]:54584 executing command: /join r2
+2025/05/16 20:05:12 Message sent to a: You have joined room: r2
+2025/05/16 20:06:37 New connection from [::1]:57519
+2025/05/16 20:06:37 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:06:44 Client [::1]:57519 executing command: /login g 123
+2025/05/16 20:06:44 User g logged in successfully
+2025/05/16 20:06:51 Client [::1]:57519 executing command: /rooms
+2025/05/16 20:06:57 Client [::1]:57519 executing command: /join r2
+2025/05/16 20:06:57 Message sent to g: You have joined room: r2
+2025/05/16 20:08:28 Client [::1]:57519 executing command: /sendfile a Abdeljalil 76136
+2025/05/16 20:08:28 Message sent to a: Incoming file: Abdeljalil (74.35 KB). Type /accept or /reject
+2025/05/16 20:12:42 New connection from [::1]:62052
+2025/05/16 20:12:42 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:12:49 Client [::1]:62052 executing command: /login a 123
+2025/05/16 20:12:49 User a logged in successfully
+2025/05/16 20:13:33 New connection from [::1]:62668
+2025/05/16 20:13:33 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:13:41 Client [::1]:62668 executing command: /login g 123
+2025/05/16 20:13:41 User g logged in successfully
+2025/05/16 20:14:00 Client [::1]:62668 executing command: /sendfile a Abdeljalil 76136
+2025/05/16 20:14:00 Message sent to a: Incoming file: Abdeljalil (74.35 KB). Type /accept or /reject
+2025/05/16 20:20:46 Server started on port 8080
+2025/05/16 20:20:57 New connection from [::1]:51806
+2025/05/16 20:20:57 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:21:08 Client [::1]:51806 executing command: /login q
+2025/05/16 20:21:13 Client [::1]:51806 executing command: /login q ss
+2025/05/16 20:21:13 User q registered and logged in
+2025/05/16 20:21:30 New connection from [::1]:52205
+2025/05/16 20:21:30 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:21:38 Client [::1]:52205 executing command: /login a 123
+2025/05/16 20:21:38 User a registered and logged in
+2025/05/16 20:22:59 Client [::1]:52205 executing command: /sendfile a Abdeljalil 76136
+2025/05/16 20:23:18 Client [::1]:52205 executing command: /accept
+2025/05/16 20:23:31 New connection from [::1]:53671
+2025/05/16 20:23:31 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:23:36 Client [::1]:51806 executing command: /users
+2025/05/16 20:23:43 Client [::1]:53671 executing command: /login a 123
+2025/05/16 20:23:43 User a logged in successfully
+2025/05/16 20:23:59 Client [::1]:53671 executing command: /sendfile q Abdeljalil 76136
+2025/05/16 20:24:10 Client [::1]:51806 executing command: /accept
+2025/05/16 20:24:17 Client [::1]:51806 executing command: /accept q
+2025/05/16 20:24:23 Client [::1]:51806 executing command: /accept a
+2025/05/16 20:24:56 Client [::1]:51806 executing command: /accept
+2025/05/16 20:24:59 Client [::1]:51806 executing command: /accept a q
+2025/05/16 20:25:01 Client [::1]:51806 executing command: /accept a qq
+2025/05/16 20:25:05 Client [::1]:51806 executing command: /accept q
+2025/05/16 20:25:12 Client [::1]:51806 executing command: /reject a
+2025/05/16 20:25:29 Client [::1]:53671 executing command: /
+2025/05/16 20:25:59 Client [::1]:53671 executing command: /sendfile q Abdeljalil 76136
+2025/05/16 20:26:07 Client [::1]:51806 executing command: /accept a

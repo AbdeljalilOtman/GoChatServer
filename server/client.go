@@ -74,6 +74,33 @@ func (c *Client) readPump() {
 		message = strings.TrimSpace(message)
 		fmt.Printf("Received from %s: %s\n", c.username, message)
 
+		// Check for JSON messages (likely file chunks)
+		if strings.HasPrefix(message, "{") && strings.HasSuffix(message, "}") {
+			var jsonMsg Message
+			if err := json.Unmarshal([]byte(message), &jsonMsg); err == nil {
+				// This is a JSON message, likely a file chunk
+				if jsonMsg.Type == "file-chunk" {
+					// Process file chunk
+					isLastChunk := false
+
+					// Check active transfers to determine if this is the last chunk
+					for _, transfer := range activeTransfers {
+						if transfer.Sender == c && transfer.Status == "accepted" {
+							// Calculate if this is potentially the last chunk
+							newSize := transfer.ReceivedSize + int64(len(jsonMsg.FileData))
+							if newSize >= transfer.FileSize {
+								isLastChunk = true
+							}
+							break
+						}
+					}
+
+					c.ProcessFileTransfer(jsonMsg.FileData, jsonMsg.FileName, isLastChunk)
+				}
+				continue
+			}
+		}
+
 		// Handle special commands
 		if strings.HasPrefix(message, "/") {
 			c.handleCommand(message)
@@ -318,13 +345,22 @@ func (c *Client) handleCommand(cmd string) {
 			return
 		}
 
+		// Create a file transfer record
+		transfer := InitiateFileTransfer(c, recipient, fileName, fileSize)
+
+		if transfer == nil {
+			c.directSend(Message{Sender: "Server", Content: "Error creating file transfer", Type: "text"})
+			return
+		}
+
 		// Notify recipient about incoming file
-		recipient.send <- Message{
-			Sender:   c.username,
-			Content:  fmt.Sprintf("Incoming file: %s (%.2f KB). Type /accept or /reject", fileName, float64(fileSize)/1024),
+		recipient.directSend(Message{
+			Sender: c.username,
+			Content: fmt.Sprintf("Incoming file: %s (%.2f KB). Type /accept %s or /reject %s",
+				fileName, float64(fileSize)/1024, c.username, c.username),
 			Type:     "file-request",
 			FileName: fileName,
-		}
+		})
 
 		c.directSend(Message{
 			Sender:  "Server",
@@ -333,22 +369,46 @@ func (c *Client) handleCommand(cmd string) {
 		})
 
 	case "/accept":
-		if !c.authenticated || !c.receivingFile {
-			c.directSend(Message{Sender: "Server", Content: "No pending file transfer", Type: "text"})
+		if !c.authenticated {
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
-		c.directSend(Message{Sender: "Server", Content: "File transfer accepted", Type: "text"})
-		// Further implementation would set up file reception
+		var senderUsername string
+		if len(parts) < 2 {
+			// Find any pending transfer for this user
+			transferMutex.Lock()
+			for _, t := range activeTransfers {
+				if t.Receiver == c && t.Status == "pending" {
+					senderUsername = t.Sender.username
+					break
+				}
+			}
+			transferMutex.Unlock()
+
+			if senderUsername == "" {
+				c.directSend(Message{Sender: "Server", Content: "No pending file transfers. Usage: /accept username", Type: "text"})
+				return
+			}
+		} else {
+			senderUsername = parts[1]
+		}
+
+		c.AcceptFileTransfer(senderUsername)
 
 	case "/reject":
-		if !c.authenticated || !c.receivingFile {
-			c.directSend(Message{Sender: "Server", Content: "No pending file transfer", Type: "text"})
+		if !c.authenticated {
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
-		c.directSend(Message{Sender: "Server", Content: "File transfer rejected", Type: "text"})
-		c.receivingFile = false
+		if len(parts) < 2 {
+			c.directSend(Message{Sender: "Server", Content: "Usage: /reject username", Type: "text"})
+			return
+		}
+
+		senderUsername := parts[1]
+		c.RejectFileTransfer(senderUsername)
 
 	default:
 		c.directSend(Message{Sender: "Server", Content: "Unknown command: " + parts[0], Type: "text"})
