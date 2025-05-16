@@ -72,6 +72,7 @@ func (c *Client) readPump() {
 		}
 
 		message = strings.TrimSpace(message)
+		fmt.Printf("Received from %s: %s\n", c.username, message)
 
 		// Handle special commands
 		if strings.HasPrefix(message, "/") {
@@ -81,11 +82,13 @@ func (c *Client) readPump() {
 
 		// If not authenticated, don't allow sending messages
 		if !c.authenticated {
-			c.send <- Message{
+			// Send directly to avoid channel issues
+			response := Message{
 				Sender:  "Server",
 				Content: "You must log in first with /login username password",
 				Type:    "text",
 			}
+			c.directSend(response)
 			continue
 		}
 
@@ -96,6 +99,23 @@ func (c *Client) readPump() {
 			Content:  message,
 			Type:     "text",
 		}
+	}
+}
+
+// directSend immediately sends a message to the client without using channels
+func (c *Client) directSend(message Message) {
+	jsonMsg, err := json.Marshal(message)
+	if err != nil {
+		fmt.Println("Error marshaling message:", err)
+		return
+	}
+
+	jsonMsg = append(jsonMsg, '\n')
+
+	fmt.Printf("Direct sending to %s: %s\n", c.username, string(jsonMsg))
+	_, err = c.conn.Write(jsonMsg)
+	if err != nil {
+		fmt.Println("Error direct sending message:", err)
 	}
 }
 
@@ -133,14 +153,14 @@ func (c *Client) handleCommand(cmd string) {
 		return
 	}
 
-	fmt.Printf("Processing command: %s from client %s\n", cmd, c.username)
+	fmt.Printf("Command received from %s: %s\n", c.username, cmd)
 
 	log.Printf("Client %s executing command: %s", c.conn.RemoteAddr().String(), cmd)
 
 	switch parts[0] {
 	case "/login":
 		if len(parts) != 3 {
-			c.send <- Message{Sender: "Server", Content: "Usage: /login username password", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Usage: /login username password", Type: "text"})
 			return
 		}
 		username, password := parts[1], parts[2]
@@ -149,7 +169,7 @@ func (c *Client) handleCommand(cmd string) {
 		if c.server.AuthenticateUser(username, password) {
 			c.username = username
 			c.authenticated = true
-			c.send <- Message{Sender: "Server", Content: "Login successful!", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Login successful!", Type: "text"})
 			// Join the default room
 			c.server.rooms["general"].AddClient(c)
 			log.Printf("User %s logged in successfully", username)
@@ -158,24 +178,24 @@ func (c *Client) handleCommand(cmd string) {
 			if c.server.RegisterUser(username, password) {
 				c.username = username
 				c.authenticated = true
-				c.send <- Message{Sender: "Server", Content: "Registered and logged in!", Type: "text"}
+				c.directSend(Message{Sender: "Server", Content: "Registered and logged in!", Type: "text"})
 				// Join the default room
 				c.server.rooms["general"].AddClient(c)
 				log.Printf("User %s registered and logged in", username)
 			} else {
-				c.send <- Message{Sender: "Server", Content: "Invalid credentials", Type: "text"}
+				c.directSend(Message{Sender: "Server", Content: "Invalid credentials", Type: "text"})
 				log.Printf("Failed login attempt for user %s", username)
 			}
 		}
 
 	case "/join":
 		if !c.authenticated {
-			c.send <- Message{Sender: "Server", Content: "You must log in first", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
 		if len(parts) != 2 {
-			c.send <- Message{Sender: "Server", Content: "Usage: /join roomname", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Usage: /join roomname", Type: "text"})
 			return
 		}
 
@@ -221,7 +241,7 @@ func (c *Client) handleCommand(cmd string) {
 
 	case "/rooms":
 		if !c.authenticated {
-			c.send <- Message{Sender: "Server", Content: "You must log in first", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
@@ -233,22 +253,22 @@ func (c *Client) handleCommand(cmd string) {
 		c.server.mutex.Unlock()
 
 		fmt.Printf("Sending room list to client %s\n", c.username)
-		c.send <- Message{Sender: "Server", Content: roomList, Type: "text"}
+		c.directSend(Message{Sender: "Server", Content: roomList, Type: "text"})
 
 	case "/users":
 		if !c.authenticated {
-			c.send <- Message{Sender: "Server", Content: "You must log in first", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
 		if c.currentRoom == "" {
-			c.send <- Message{Sender: "Server", Content: "You are not in any room", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "You are not in any room", Type: "text"})
 			return
 		}
 
 		room, exists := c.server.rooms[c.currentRoom]
 		if !exists {
-			c.send <- Message{Sender: "Server", Content: "Room not found", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Room not found", Type: "text"})
 			return
 		}
 
@@ -261,16 +281,16 @@ func (c *Client) handleCommand(cmd string) {
 		room.mutex.Unlock()
 
 		fmt.Printf("Sending user list to client %s\n", c.username)
-		c.send <- Message{Sender: "Server", Content: userList, Type: "text"}
+		c.directSend(Message{Sender: "Server", Content: userList, Type: "text"})
 
 	case "/sendfile":
 		if !c.authenticated {
-			c.send <- Message{Sender: "Server", Content: "You must log in first", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "You must log in first", Type: "text"})
 			return
 		}
 
 		if len(parts) < 4 {
-			c.send <- Message{Sender: "Server", Content: "Usage: /sendfile username filename filesize", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Usage: /sendfile username filename filesize", Type: "text"})
 			return
 		}
 
@@ -278,7 +298,7 @@ func (c *Client) handleCommand(cmd string) {
 		fileName := parts[2]
 		fileSize, err := strconv.ParseInt(parts[3], 10, 64)
 		if err != nil {
-			c.send <- Message{Sender: "Server", Content: "Invalid file size", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "Invalid file size", Type: "text"})
 			return
 		}
 
@@ -294,7 +314,7 @@ func (c *Client) handleCommand(cmd string) {
 		c.server.mutex.Unlock()
 
 		if recipient == nil {
-			c.send <- Message{Sender: "Server", Content: "User not found or not online", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "User not found or not online", Type: "text"})
 			return
 		}
 
@@ -306,31 +326,31 @@ func (c *Client) handleCommand(cmd string) {
 			FileName: fileName,
 		}
 
-		c.send <- Message{
+		c.directSend(Message{
 			Sender:  "Server",
 			Content: "File transfer request sent. Waiting for " + targetUser + " to accept...",
 			Type:    "text",
-		}
+		})
 
 	case "/accept":
 		if !c.authenticated || !c.receivingFile {
-			c.send <- Message{Sender: "Server", Content: "No pending file transfer", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "No pending file transfer", Type: "text"})
 			return
 		}
 
-		c.send <- Message{Sender: "Server", Content: "File transfer accepted", Type: "text"}
+		c.directSend(Message{Sender: "Server", Content: "File transfer accepted", Type: "text"})
 		// Further implementation would set up file reception
 
 	case "/reject":
 		if !c.authenticated || !c.receivingFile {
-			c.send <- Message{Sender: "Server", Content: "No pending file transfer", Type: "text"}
+			c.directSend(Message{Sender: "Server", Content: "No pending file transfer", Type: "text"})
 			return
 		}
 
-		c.send <- Message{Sender: "Server", Content: "File transfer rejected", Type: "text"}
+		c.directSend(Message{Sender: "Server", Content: "File transfer rejected", Type: "text"})
 		c.receivingFile = false
 
 	default:
-		c.send <- Message{Sender: "Server", Content: "Unknown command: " + parts[0], Type: "text"}
+		c.directSend(Message{Sender: "Server", Content: "Unknown command: " + parts[0], Type: "text"})
 	}
 }

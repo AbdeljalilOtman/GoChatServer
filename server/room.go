@@ -23,26 +23,17 @@ func (r *Room) AddClient(client *Client) {
 	defer r.mutex.Unlock()
 
 	r.clients[client] = true
+	fmt.Printf("Added %s to room %s\n", client.username, r.name)
 
-	// Broadcast to room that a new user has joined
-	fmt.Printf("User %s joined room %s\n", client.username, r.name)
-
-	msg := Message{
-		Sender:   "Server",
-		RoomName: r.name,
-		Content:  client.username + " has joined the room",
-		Type:     "text",
-	}
-
-	// Broadcast to all clients in the room
+	// Broadcast to room that a new user has joined, but not to the new user
 	for c := range r.clients {
-		if c.authenticated && c != client {
-			select {
-			case c.send <- msg:
-			default:
-				// If the client's send channel is full, remove them
-				delete(r.clients, c)
-			}
+		if c != client && c.authenticated {
+			c.directSend(Message{
+				Sender:   "Server",
+				RoomName: r.name,
+				Content:  client.username + " has joined the room",
+				Type:     "text",
+			})
 		}
 	}
 }
@@ -53,26 +44,17 @@ func (r *Room) RemoveClient(client *Client) {
 
 	if _, ok := r.clients[client]; ok {
 		delete(r.clients, client)
+		fmt.Printf("Removed %s from room %s\n", client.username, r.name)
 
 		// Broadcast to room that a user has left
-		fmt.Printf("User %s left room %s\n", client.username, r.name)
-
-		msg := Message{
-			Sender:   "Server",
-			RoomName: r.name,
-			Content:  client.username + " has left the room",
-			Type:     "text",
-		}
-
-		// Broadcast to remaining clients in the room
 		for c := range r.clients {
 			if c.authenticated {
-				select {
-				case c.send <- msg:
-				default:
-					// If the client's send channel is full, remove them
-					delete(r.clients, c)
-				}
+				c.directSend(Message{
+					Sender:   "Server",
+					RoomName: r.name,
+					Content:  client.username + " has left the room",
+					Type:     "text",
+				})
 			}
 		}
 	}
@@ -82,14 +64,11 @@ func (r *Room) Broadcast(message Message) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	fmt.Printf("Broadcasting in room %s: %s\n", r.name, message.Content)
+
 	for client := range r.clients {
 		if client.authenticated {
-			select {
-			case client.send <- message:
-			default:
-				// If the client's send channel is full, remove them
-				delete(r.clients, client)
-			}
+			client.directSend(message)
 		}
 	}
 }

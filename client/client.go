@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 	"strings"
-	"sync"
+	"time"
 )
 
 type Message struct {
@@ -43,70 +43,73 @@ func main() {
 	fmt.Println("  /sendfile <username> <filepath> - Send a file to a user")
 	fmt.Println("  /quit - Exit the client")
 
-	// Start goroutine to read messages from the server
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Create a channel to signal when the read goroutine exits
+	done := make(chan struct{})
 
+	// Start goroutine to read messages from the server
 	go func() {
-		defer wg.Done()
+		defer func() {
+			close(done)
+			fmt.Println("Reader goroutine finished.")
+		}()
+
 		reader := bufio.NewReader(conn)
 
 		for {
-			// Read raw message bytes
+			// Read raw message bytes with timeout
+			conn.SetReadDeadline(time.Now().Add(1 * time.Hour)) // 1 hour timeout
+
 			msgBytes, err := reader.ReadBytes('\n')
 			if err != nil {
-				if err == io.EOF {
-					fmt.Println("Server closed the connection.")
+				if err == io.EOF || strings.Contains(err.Error(), "connection") {
+					fmt.Println("Server connection closed.")
 				} else {
-					fmt.Println("Error reading from server:", err)
+					fmt.Printf("Error reading from server: %v\n", err)
 				}
 				return
 			}
 
+			// Reset read deadline after successful read
+			conn.SetReadDeadline(time.Time{})
+
 			// Debug: Print raw received message
-			fmt.Printf("Received: %s", string(msgBytes))
+			fmt.Printf("RAW: %s", string(msgBytes))
 
 			var message Message
 			err = json.Unmarshal(msgBytes, &message)
 			if err != nil {
-				fmt.Printf("Error parsing message: %v\nRaw message: %s", err, string(msgBytes))
+				fmt.Printf("Error parsing message: %v\n", err)
 				continue
 			}
 
-			// Print the message in a clear format
-			fmt.Println("\n----- MESSAGE FROM SERVER -----")
-
-			// Handle different message types
+			// Format output based on message type
 			switch message.Type {
 			case "text":
-				// Regular text message
 				if message.RoomName != "" && message.RoomName != "general" {
-					fmt.Printf("[%s] %s: %s\n", message.RoomName, message.Sender, message.Content)
+					fmt.Printf("\n[%s] %s: %s\n", message.RoomName, message.Sender, message.Content)
 				} else {
-					fmt.Printf("%s: %s\n", message.Sender, message.Content)
+					fmt.Printf("\n%s: %s\n", message.Sender, message.Content)
 				}
 
 			case "file-request":
-				// File transfer request
-				fmt.Printf("%s wants to send you a file: %s\n", message.Sender, message.FileName)
-				fmt.Println("Type /accept or /reject to respond")
+				fmt.Printf("\n%s wants to send file: %s\nType /accept or /reject\n",
+					message.Sender, message.FileName)
 
 			case "file-chunk":
-				// Handle file chunk reception
-				fmt.Printf("Received chunk of file %s\n", message.FileName)
-				// Implementation would save chunks to a file
+				fmt.Printf("\nReceived chunk of file: %s\n", message.FileName)
 
 			default:
-				fmt.Printf("%s: %s\n", message.Sender, message.Content)
+				fmt.Printf("\n%s: %s\n", message.Sender, message.Content)
 			}
 
-			fmt.Println("-----------------------------")
+			fmt.Print("> ")
 		}
 	}()
 
 	// Read input from the user and send to the server
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
+
 	for scanner.Scan() {
 		text := scanner.Text()
 
@@ -203,8 +206,12 @@ func main() {
 			break
 		}
 
-		fmt.Print("> ")
+		// Don't print prompt immediately for commands that expect responses
+		if !strings.HasPrefix(text, "/") {
+			fmt.Print("> ")
+		}
 	}
 
-	wg.Wait()
+	// Wait for the reader goroutine to finish
+	<-done
 }
