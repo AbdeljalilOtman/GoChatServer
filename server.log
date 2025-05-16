@@ -96,3 +96,14 @@
 2025/05/16 20:25:29 Client [::1]:53671 executing command: /
 2025/05/16 20:25:59 Client [::1]:53671 executing command: /sendfile q Abdeljalil 76136
 2025/05/16 20:26:07 Client [::1]:51806 executing command: /accept a
+2025/05/16 20:35:49 Server started on port 8080
+2025/05/16 20:36:00 New connection from [::1]:62806
+2025/05/16 20:36:00 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:36:04 Client [::1]:62806 executing command: /login a 123
+2025/05/16 20:36:04 User a registered and logged in
+2025/05/16 20:36:10 New connection from [::1]:62930
+2025/05/16 20:36:10 Message sent to : Welcome to the chat server! Please log in with /login username password
+2025/05/16 20:36:14 Client [::1]:62930 executing command: /login q 123
+2025/05/16 20:36:14 User q registered and logged in
+2025/05/16 20:36:51 Client [::1]:62930 executing command: /sendfile a Abdeljalil 76136
+2025/05/16 20:37:00 Client [::1]:62806 executing command: /accept q

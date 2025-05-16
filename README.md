@@ -78,7 +78,87 @@ A robust, feature-rich chat server built with Go that supports multiple rooms, d
 | `/rooms` | Show list of available rooms | `/rooms` |
 | `/users` | List users in current room | `/users` |
 | `/sendfile <username> <filepath>` | Send a file to a user | `/sendfile bob /path/to/file.txt` |
+| `/accept [username]` | Accept an incoming file transfer | `/accept alice` |
+| `/reject [username]` | Reject an incoming file transfer | `/reject alice` |
+| `/clear` | Clear the terminal screen | `/clear` |
+| `/help` | Display available commands | `/help` |
 | `/quit` | Exit the client | `/quit` |
+
+## 📁 Testing File Transfer
+
+The file transfer feature allows users to send files to each other through the chat. Here's how to test it:
+
+### Setting Up for Transfer
+
+1. Start the server:
+   ```bash
+   cd GoChatServer
+   go run main.go
+   ```
+
+2. Open two terminal windows and start two client instances:
+   ```bash
+   cd GoChatServer/client
+   go run client.go
+   ```
+
+3. In each client, log in with different usernames:
+   ```
+   /login user1 password1
+   ```
+   ```
+   /login user2 password2
+   ```
+
+### Sending Files
+
+4. In the first client (user1), send a file to the second client:
+   ```
+   /sendfile user2 path/to/your/file.txt
+   ```
+   You can use the test.txt file included in the project:
+   ```
+   /sendfile user2 ../test.txt
+   ```
+
+5. In the second client (user2), you'll see a notification about the incoming file:
+   ```
+   user1 wants to send file: file.txt
+   Type /accept user1 or /reject user1
+   ```
+
+6. To accept the file transfer, type:
+   ```
+   /accept user1
+   ```
+   Or simply:
+   ```
+   /accept
+   ```
+   (if you only have one pending transfer)
+
+7. The file will be transferred and saved in the `downloads` folder in the server's directory.
+
+### Transfer Progress
+
+During the file transfer:
+- The sender will see a progress bar showing the transfer status
+- The receiver will be notified when the transfer is complete
+- The terminal will display the saved file location
+
+### Troubleshooting
+
+- **"No pending file transfer"**: Make sure you've typed the correct username when accepting
+- **File not found**: Check that the file path is correct and the file exists
+- **Transfer stalls**: Ensure both clients remain connected during the transfer
+- **Permission denied**: Ensure the server has write access to create the downloads directory
+
+## 📝 Additional Information
+
+- **File Storage**: Received files are saved in the `downloads` directory on the server, with a timestamp prefix to avoid name conflicts
+- **Transfer Limits**: The default chunk size is 8KB, suitable for most files
+- **Supported File Types**: All file types are supported
+- **Maximum File Size**: There is no hard limit on file size, but very large files may take significant time to transfer
 
 ## Project Structure
 
